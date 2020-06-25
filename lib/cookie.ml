@@ -1,4 +1,5 @@
 module Date = Date
+module Signer = Signer
 
 type header = string * string
 
@@ -38,8 +39,13 @@ type t = {
 }
 
 let make ?(expires = `Session) ?(scope = Uri.empty) ?(same_site = `Lax)
-    ?(secure = false) ?(http_only = true) value =
-  { expires; scope; same_site; secure; http_only; value }
+    ?(secure = false) ?(http_only = true) ?sign_with (key, value) =
+  let value =
+    match sign_with with
+    | None -> value
+    | Some signer -> Signer.sign signer value
+  in
+  { expires; scope; same_site; secure; http_only; value = (key, value) }
 
 let of_set_cookie_header ?origin:_ ((_, value) : header) =
   match Astring.String.cut ~sep:";" value with
@@ -176,12 +182,49 @@ let to_cookie_header ?now ?(elapsed = 0L) ?(scope = Uri.of_string "/") tl =
         |> List.map (fun (key, value) -> Printf.sprintf "%s=%s" key value)
         |> String.concat "; " )
 
-let cookies_of_header (key, value) =
+let cookie_of_header ?signed_with cookie_key (key, value) =
+  match key with
+  | "Cookie" | "cookie" ->
+      String.split_on_char ';' value
+      |> List.map (Astring.String.cut ~sep:"=")
+      |> ListLabels.find_map ~f:(function
+           | Some (k, value) when k = cookie_key ->
+               let value =
+                 match signed_with with
+                 | Some signer -> String.trim value |> Signer.unsign signer
+                 | None -> Some (String.trim value)
+               in
+               Option.map (fun el -> (String.trim k, el)) value
+           | _ -> None)
+  | _ -> None
+
+let cookie_of_headers ?signed_with cookie_key headers =
+  let rec aux = function
+    | [] -> None
+    | header :: rest -> (
+        match cookie_of_header ?signed_with cookie_key header with
+        | Some cookie -> Some cookie
+        | None -> aux rest )
+  in
+  aux headers
+
+let cookies_of_header ?signed_with (key, value) =
   match key with
   | "Cookie" | "cookie" ->
       String.split_on_char ';' value
       |> List.map (Astring.String.cut ~sep:"=")
       |> Util.List.filter_map (function
-           | Some (key, value) -> Some (String.trim key, String.trim value)
+           | Some (key, value) ->
+               let value =
+                 match signed_with with
+                 | Some signer -> String.trim value |> Signer.unsign signer
+                 | None -> Some (String.trim value)
+               in
+               Option.map (fun el -> (String.trim key, el)) value
            | None -> None)
   | _ -> []
+
+let cookies_of_headers ?signed_with headers =
+  ListLabels.fold_left headers ~init:[] ~f:(fun acc header ->
+      let cookies = cookies_of_header ?signed_with header in
+      acc @ cookies)

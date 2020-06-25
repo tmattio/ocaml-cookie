@@ -1,3 +1,24 @@
+module Signer : sig
+  type t
+
+  val make : ?salt:string -> string -> t
+  (** [make secret] returns a new signer that will sign values with [secret] *)
+
+  val sign : t -> string -> string
+  (** [sign signer value] signs the string [value] with [signer] *)
+
+  val unsign : t -> string -> string option
+  (** [unsign signer value] unsigns a signed string [value] with [signer] *)
+end
+
+module Date : sig
+  type date_time = Ptime.date * Ptime.time
+
+  val parse : string -> (date_time, [> `Malformed ]) result
+
+  val serialize : date_time -> string
+end
+
 type header = string * string
 (** A standard header type used in many web frameworks like Httpaf and Cohttp *)
 
@@ -31,6 +52,7 @@ val make :
   ?same_site:same_site ->
   ?secure:bool ->
   ?http_only:bool ->
+  ?sign_with:Signer.t ->
   cookie ->
   t
 (** [make] creates a cookie, it will default to the following values:
@@ -47,12 +69,12 @@ val to_set_cookie_header : t -> header
 val to_cookie_header :
   ?now:Ptime.t -> ?elapsed:int64 -> ?scope:Uri.t -> t list -> header
 
-val cookies_of_header : header -> cookie list
+val cookie_of_header :
+  ?signed_with:Signer.t -> string -> header -> cookie option
 
-module Date : sig
-  type date_time = Ptime.date * Ptime.time
+val cookies_of_header : ?signed_with:Signer.t -> header -> cookie list
 
-  val parse : string -> (date_time, [> `Malformed ]) result
+val cookie_of_headers :
+  ?signed_with:Signer.t -> string -> header list -> cookie option
 
-  val serialize : date_time -> string
-end
+val cookies_of_headers : ?signed_with:Signer.t -> header list -> cookie list

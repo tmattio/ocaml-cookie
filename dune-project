@@ -21,6 +21,8 @@
       uri
       ptime
       astring
+      mirage-crypto
+      base64
       (alcotest :with-test)
       (junit :with-test)
       (junit_alcotest :with-test)
