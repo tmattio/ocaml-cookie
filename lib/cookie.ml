@@ -180,8 +180,8 @@ let cookies_of_header (key, value) =
   match key with
   | "Cookie" | "cookie" ->
       String.split_on_char ';' value
-      |> List.map (String.split_on_char '=')
+      |> List.map (Astring.String.cut ~sep:"=")
       |> Util.List.filter_map (function
-           | [ key; value ] -> Some (String.trim key, String.trim value)
-           | _ -> None)
+           | Some (key, value) -> Some (String.trim key, String.trim value)
+           | None -> None)
   | _ -> []
