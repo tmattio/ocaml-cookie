@@ -20,12 +20,14 @@
     "docs:path": "esy echo #{self.target_dir / 'default' / '_doc' / '_html'}"
   },
   "dependencies": {
-    "@opam/astring": "^0.8.3",
-    "@opam/dune": ">=1.5.0",
-    "@opam/ptime": "0.8.5",
-    "@opam/uri": "3.1.0",
+    "@opam/astring": "*",
+    "@opam/dune": "*",
+    "@opam/ptime": "*",
+    "@opam/uri": "*",
     "@opam/mirage-crypto": "*",
     "@opam/base64": "*",
+    "ocaml": ">=4.7.0",
+    "dune": ">=1.11"
   },
   "devDependencies": {
     "ocaml": "~4.9.0",

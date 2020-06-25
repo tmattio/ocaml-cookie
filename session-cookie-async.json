@@ -11,9 +11,10 @@
     "install": "esy-installer #{self.target_dir / 'default' / 'session-cookie-async.install'}"
   },
   "dependencies": {
-    "@reason-native-web/session-cookie": "^0.1.4",
+    "@opam/session-cookie": "*",
     "@opam/async": "*",
-    "ocaml": ">=4.8.0"
+    "ocaml": ">=4.7.0",
+    "dune": ">=1.11"
   },
   "devDependencies": {
     "ocaml": "~4.9.0",

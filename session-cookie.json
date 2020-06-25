@@ -20,9 +20,10 @@
     "docs:path": "esy echo #{self.target_dir / 'default' / '_doc' / '_html'}"
   },
   "dependencies": {
-    "@reason-native-web/cookie": "^0.1.4",
-    "@opam/session": "^0.4.1",
-    "ocaml": ">=4.8.0"
+    "@opam/cookie": "*",
+    "@opam/session": "*",
+    "ocaml": ">=4.7.0",
+    "dune": ">=1.11"
   },
   "devDependencies": {
     "ocaml": "~4.9.0",
